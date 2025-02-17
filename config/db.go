@@ -6,16 +6,13 @@ import (
 	"gorm.io/gorm"
 )
 
-
-var DB *gorm.DB
-
-func ConnectDB () {
+func ConnectDB () *gorm.DB {
 	db, err := gorm.Open(postgres.Open("postgres://wahlly:369852@localhost:5432/digiWal"), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
 
 	db.AutoMigrate(&models.User{})
-	DB = db
 
+	return db
 }

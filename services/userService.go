@@ -13,13 +13,28 @@ type UserService struct{
 	db *gorm.DB
 }
 
+func NewUserService(db *gorm.DB) *UserService {
+	return &UserService{
+		db: db,
+	}
+}
+
 func (us *UserService) CreateUser(user *models.User) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err != nil {
-		return nil
+		return err
 	}
 
+	walletAddress, err := utils.GenerateWalletAddress(us.db)
+	if err != nil {
+		return err
+	}
+	
 	user.Password = string(hashedPassword)
+	user.Wallet = models.Wallet{
+		Address: walletAddress,
+		Balance: 0,
+	}
 	err = us.db.Create(user).Error
 	if err != nil {
 		return err
