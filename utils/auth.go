@@ -2,6 +2,7 @@ package utils
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,12 +10,14 @@ import (
 
 func Authenticate() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		clientToken := ctx.Request.Header.Get("token")
-		if clientToken == "" {
+		bearerAuth := ctx.Request.Header.Get("authorization")
+		auth := strings.Split(bearerAuth, " ")
+		if len(auth) < 2 || auth[1] == "" {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"message": "no authorization header"})
 			ctx.Abort()
 			return
 		}
+		clientToken := auth[1]
 
 		valid, claims, msg := ValidateJWTtoken(clientToken)
 		if !valid {

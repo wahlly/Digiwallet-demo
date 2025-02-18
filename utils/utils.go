@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"math/rand"
 	"strconv"
 
@@ -11,20 +10,20 @@ import (
 
 
 func GenerateWalletAddress(db *gorm.DB) (string, error) {
-	address := ""
-	for i := 0; i < 10; i++ {
-		address += strconv.Itoa(rand.Intn(10))
-	}
+	for {
+		var address string
+		for i := 0; i < 10; i++ {
+			address += strconv.Itoa(rand.Intn(10))
+		}
 
-	var user *models.User
-	err := db.Where("wallet->>'address' = ?", address).First(&user).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return GenerateWalletAddress(db)
-		} else{
+		var count int64
+		err := db.Model(&models.User{}).Where("wallet->>'address' = ?", address).Count(&count).Error
+		if err != nil {
 			return "", err
 		}
-	}
 
-	return address, nil
+		if count == 0 {
+			return address, nil
+		}
+	}
 }

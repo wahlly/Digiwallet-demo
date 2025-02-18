@@ -11,5 +11,8 @@ func RegisterRoutes(s *gin.Engine, db *gorm.DB) {
 
 
 	userService := services.NewUserService(db)
+	walletService := services.NewWalletService(userService)
+
 	UserRoutes(basePath, *userService)
+	WalletRoutes(basePath, walletService)
 }
