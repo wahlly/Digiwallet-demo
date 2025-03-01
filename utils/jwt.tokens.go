@@ -10,8 +10,8 @@ import (
 
 
 type SignedDetails struct{
-	Email	string
-	id	uint
+	Email	string `json:"email"`
+	Id	uint	`json:"id"`
 	jwt.StandardClaims
 }
 
@@ -20,7 +20,7 @@ var SECRET_KEY = os.Getenv("SECRET_KEY")
 func GenerateJWTtoken(user models.User) (signedToken string, err error) {
 	claims := &SignedDetails{
 		Email: user.Email,
-		id: user.ID,
+		Id: user.ID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24)).Unix(),
 		},

@@ -13,14 +13,14 @@ type WalletController struct {
 }
 
 func (wc *WalletController) GetUserWallet(c *gin.Context) {
-	email, exists := c.Get("email")
+	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized, sign in again"})
 		c.Abort()
 		return
 	}
 
-	wallet, err := wc.WalletService.GetUserWallet(email.(string))
+	wallet, err := wc.WalletService.GetUserWallet(id.(uint))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		c.Abort()

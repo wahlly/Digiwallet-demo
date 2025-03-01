@@ -25,9 +25,9 @@ func Authenticate() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-
+		
 		ctx.Set("email", claims.Email)
-		ctx.Set("id", claims.id)
+		ctx.Set("id", uint(claims.Id))
 		ctx.Next()
 	}
 }
