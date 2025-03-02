@@ -1,7 +1,10 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/wahlly/Digiwallet-demo/models"
+	"github.com/wahlly/Digiwallet-demo/modules/paystack"
 )
 
 type WalletService struct {
@@ -20,4 +23,14 @@ func (ws *WalletService) GetUserWallet(id uint) (*models.Wallet, error) {
 	}
 
 	return &user.Wallet, nil
+}
+
+func (ws *WalletService) InitializeWalletDeposit(payload *paystack.InitTxnReqBody) (map[string]any, error) {
+	paystackClient := paystack.NewPaystackClient()
+	res, err := paystackClient.InitiateTransaction(payload.Amount, payload.Email)
+	if err != nil {
+		return nil, err
+	}
+fmt.Println("resp: ", res)
+	return res, nil
 }

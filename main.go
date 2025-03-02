@@ -1,14 +1,20 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/wahlly/Digiwallet-demo/config"
 	"github.com/wahlly/Digiwallet-demo/routes"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file")
+	}
 	router := gin.New()
 	db := config.ConnectDB()
 
