@@ -3,7 +3,6 @@ package paystack
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -26,10 +25,16 @@ type InitTxnReqBody struct {
 	Amount uint `json:"amount"`
 }
 
-func (p *PaystackClient) InitiateTransaction(amount uint, email string) (map[string]any, error) {
-	fmt.Println("burl: ", p.SecretKey)
+type PaystackInitTxnRes struct {
+	Status bool `json:"status"`
+	Message string `json:"message"`
+	Data map[string]any `json:"data"`
+}
+
+func (p *PaystackClient) InitiateTransaction(amount uint, email string) (PaystackInitTxnRes, error) {
 	url := string(p.BaseUrl) + "/transaction/initialize"
-	fmt.Println("url: ", url)
+	var resBody PaystackInitTxnRes
+
 	payload := &InitTxnReqBody{
 		Email: email,
 		Amount: amount * 100,	//convert to kobo
@@ -38,13 +43,13 @@ func (p *PaystackClient) InitiateTransaction(amount uint, email string) (map[str
 	//convert the payload to json
 	payloadJson, err := json.Marshal(payload)
 	if err != nil {
-		return nil, err
+		return resBody, err
 	}
 
 	//create request
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadJson))
 	if err != nil {
-		return nil, err
+		return resBody, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -54,20 +59,19 @@ func (p *PaystackClient) InitiateTransaction(amount uint, email string) (map[str
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return resBody, err
 	}
 	defer res.Body.Close()
 
 	//read the response
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return resBody, err
 	}
 
 	//parse the response
-	var resBody map[string]any
 	if err := json.Unmarshal(body, &resBody); err != nil {
-		return nil, err
+		return resBody, err
 	}
 
 	return resBody, nil

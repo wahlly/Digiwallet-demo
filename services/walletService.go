@@ -1,7 +1,7 @@
 package services
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/wahlly/Digiwallet-demo/models"
 	"github.com/wahlly/Digiwallet-demo/modules/paystack"
@@ -31,6 +31,10 @@ func (ws *WalletService) InitializeWalletDeposit(payload *paystack.InitTxnReqBod
 	if err != nil {
 		return nil, err
 	}
-fmt.Println("resp: ", res)
-	return res, nil
+
+	if !res.Status {
+		return nil, errors.New(res.Message)
+	}
+
+	return map[string]any{"data": res}, nil
 }
