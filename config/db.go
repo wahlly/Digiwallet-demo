@@ -12,7 +12,10 @@ func ConnectDB () *gorm.DB {
 		panic(err)
 	}
 
-	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(
+		&models.User{},
+		&models.Transaction{},
+	)
 
 	return db
 }

@@ -27,3 +27,18 @@ func GenerateWalletAddress(db *gorm.DB) (string, error) {
 		}
 	}
 }
+
+func AlphaNumeric(length uint, form string) string {
+	characters := map[string]string{
+		"alphaNumeric": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+		"alpha": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+		"numeric": "0123456789",
+	}
+
+	var res string
+	for i := 0; i < int(length); i++ {
+		res += string(characters[form][rand.Intn(10)])
+	}
+
+	return res
+}

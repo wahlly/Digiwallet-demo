@@ -31,13 +31,19 @@ type PaystackInitTxnRes struct {
 	Data map[string]any `json:"data"`
 }
 
-func (p *PaystackClient) InitiateTransaction(amount uint, email string) (PaystackInitTxnRes, error) {
+func (p *PaystackClient) InitiateTransaction(amount uint, email string, ref string) (*PaystackInitTxnRes, error) {
 	url := string(p.BaseUrl) + "/transaction/initialize"
-	var resBody PaystackInitTxnRes
+	var resBody *PaystackInitTxnRes
 
-	payload := &InitTxnReqBody{
-		Email: email,
-		Amount: amount * 100,	//convert to kobo
+	// payload := &InitTxnReqBody{
+	// 	Email: email,
+	// 	Amount: amount * 100,	//convert to kobo
+	// }
+
+	payload := map[string]any{
+		"email": email,
+		"amount": amount * 100,
+		"reference": ref,
 	}
 
 	//convert the payload to json

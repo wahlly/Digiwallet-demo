@@ -32,6 +32,13 @@ func (wc *WalletController) GetUserWallet(c *gin.Context) {
 }
 
 func (wc *WalletController) InitializeWalletDeposit(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized, sign in again"})
+		c.Abort()
+		return
+	}
+
 	var payload paystack.InitTxnReqBody
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -39,12 +46,16 @@ func (wc *WalletController) InitializeWalletDeposit(c *gin.Context) {
 		return
 	}
 
-	res, err := wc.WalletService.InitializeWalletDeposit(&payload)
+	res, err := wc.WalletService.InitializeWalletDeposit(&payload, id.(uint))
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 		c.Abort()
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "success", "data": res})
+	r := map[string]any{
+		"uid": id,
+		"payment_res": res,
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "success", "data": r})
 }
