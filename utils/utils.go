@@ -42,3 +42,10 @@ func AlphaNumeric(length uint, form string) string {
 
 	return res
 }
+
+type ApiMessageHandler struct {
+	Status	bool			`json:"status"`
+	StatusCode	int			`json:"statusCode"`
+	Message	string		`json:"message"`
+	Data		map[string]any	`json:"data"`
+}

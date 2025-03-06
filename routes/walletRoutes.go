@@ -14,4 +14,5 @@ func WalletRoutes(rg *gin.RouterGroup, ws *services.WalletService) {
 
 	router.GET("/", utils.Authenticate(), wc.GetUserWallet)
 	router.POST("/deposit/initialize", utils.Authenticate(), wc.InitializeWalletDeposit)
+	router.GET("/deposit/verify/:reference", utils.Authenticate(), wc.VerifyWalletDeposit)
 }

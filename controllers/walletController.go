@@ -59,3 +59,28 @@ func (wc *WalletController) InitializeWalletDeposit(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "success", "data": r})
 }
+
+func (wc *WalletController) VerifyWalletDeposit(c *gin.Context) {
+	reference := c.Param("reference")
+	if reference == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid reference"})
+		c.Abort()
+		return
+	}
+
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized, sign in again"})
+		c.Abort()
+		return
+	}
+
+	res, err := wc.WalletService.VerifyWalletDeposit(id.(uint), reference)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusInternalServerError, gin.H{"message": "wallet deposit successfull", "data": res})
+}
