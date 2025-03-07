@@ -27,6 +27,16 @@ func (ws *WalletService) GetUserWallet(id uint) (*models.Wallet, error) {
 	return &user.Wallet, nil
 }
 
+func (ws *WalletService) GetWalletByAddress(address string) (*models.Wallet, error) {
+	var user models.User
+	err := ws.us.db.Where("wallet->>'address' = ?", address).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user.Wallet, nil
+}
+
 func (ws *WalletService) InitializeWalletDeposit(payload *paystack.InitTxnReqBody, userId uint) (*paystack.PaystackInitTxnRes, error) {
 	if payload.Amount < 100 {
 		return nil, errors.New("minimum deposit allowed is 100")
@@ -101,4 +111,30 @@ func (ws *WalletService) VerifyWalletDeposit(uid uint, reference string) (map[st
 	ws.us.db.Save(&user)
 
 	return map[string]any{"amount": txn.Amount/100}, nil
+}
+
+func (ws *WalletService) TransferToWalletAddress(uid, amount uint, recipientAddress string) error {
+	var user models.User
+	err := ws.us.db.Where("id = ?", uid).First(&user).Error
+	if err != nil {
+		return err
+	}
+
+	if user.Wallet.Balance < int64(amount) * 100 {
+		return errors.New("insufficient account balance")
+	}
+
+	var recipient models.User
+	err = ws.us.db.Where("wallet->>'address' = ?", recipientAddress).First(&recipient).Error
+	if err != nil {
+		return err
+	}
+
+	user.Wallet.Balance -= int64(amount) * 100
+	ws.us.db.Save(&user)
+
+	recipient.Wallet.Balance += int64(amount) * 100
+	ws.us.db.Save(&recipient)
+
+	return nil
 }
