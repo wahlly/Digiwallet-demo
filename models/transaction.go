@@ -9,7 +9,7 @@ type Transaction struct {
 	Amount		uint		`json:"amount"`
 	Type 			string	`json:"type"`
 	Reference		string	`json:"reference"`
-	Status		string	`json:"status"`
+	Status		string	`json:"status" gorm:"default:pending"`
 	User_id		int		`json:"user_id"`
 	User			User
 }

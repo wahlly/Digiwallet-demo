@@ -28,6 +28,9 @@ func (ws *WalletService) GetUserWallet(id uint) (*models.Wallet, error) {
 }
 
 func (ws *WalletService) InitializeWalletDeposit(payload *paystack.InitTxnReqBody, userId uint) (*paystack.PaystackInitTxnRes, error) {
+	if payload.Amount < 100 {
+		return nil, errors.New("minimum deposit allowed is 100")
+	}
 	ref := strings.ToUpper(utils.AlphaNumeric(10, "alphaNumeric"))
 	res := &paystack.PaystackInitTxnRes{}
 	var err error
@@ -61,6 +64,17 @@ func (ws *WalletService) VerifyWalletDeposit(uid uint, reference string) (map[st
 	paystackClient := paystack.NewPaystackClient()
 	res := &paystack.PaystackVerifyTxnRes{}
 	var err error
+
+	var txn models.Transaction
+	err = ws.us.db.Where("reference = ? AND user_id = ?", reference, uid).First(&txn).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if txn.Status != "pending" {
+		return nil, errors.New("transaction has already been settled")
+	}
+
 	res, err = paystackClient.VerifyTransaction(uid, reference)
 	if err != nil {
 		return nil, err
@@ -70,10 +84,8 @@ func (ws *WalletService) VerifyWalletDeposit(uid uint, reference string) (map[st
 		return nil, errors.New(res.Message) 
 	}
 
-	var txn models.Transaction
-	err = ws.us.db.Where("reference = ? AND user_id = ?", reference, uid).First(&txn).Error
-	if err != nil {
-		return nil, err
+	if strings.ToLower(res.Data["gateway_response"].(string)) != "successful" {
+		return nil, errors.New(res.Data["gateway_response"].(string))
 	}
 
 	txn.Status = "success"
@@ -86,6 +98,7 @@ func (ws *WalletService) VerifyWalletDeposit(uid uint, reference string) (map[st
 	}
 
 	user.Wallet.Balance += int64(txn.Amount)
+	ws.us.db.Save(&user)
 
-	return map[string]any{"amount": txn.Amount}, nil
+	return map[string]any{"amount": txn.Amount/100}, nil
 }

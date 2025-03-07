@@ -82,5 +82,5 @@ func (wc *WalletController) VerifyWalletDeposit(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusInternalServerError, gin.H{"message": "wallet deposit successfull", "data": res})
+	c.JSON(http.StatusOK, gin.H{"message": "wallet deposit successfull", "data": res})
 }
