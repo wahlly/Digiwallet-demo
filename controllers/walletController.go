@@ -10,7 +10,7 @@ import (
 
 
 type WalletController struct {
-	WalletService *services.WalletService 
+	WalletService *services.WalletService
 }
 
 func (wc *WalletController) GetUserWallet(c *gin.Context) {
@@ -76,21 +76,18 @@ func (wc *WalletController) VerifyWalletDeposit(c *gin.Context) {
 	reference := c.Param("reference")
 	if reference == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid reference"})
-		c.Abort()
 		return
 	}
 
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized, sign in again"})
-		c.Abort()
 		return
 	}
 
 	res, err := wc.WalletService.VerifyWalletDeposit(id.(uint), reference)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		c.Abort()
 		return
 	}
 
@@ -99,30 +96,43 @@ func (wc *WalletController) VerifyWalletDeposit(c *gin.Context) {
 
 func (wc *WalletController) TransferToWalletAddress(c *gin.Context) {
 	type reqBody struct{
-		Amount uint `json:"amount"`
-		Recipient string	`json:"recipient"`
+		Amount uint `json:"amount" binding:"required,min=100"`
+		Recipient string	`json:"recipient" binding:"required"`
 	}
 	var payload reqBody
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		c.Abort()
 		return
 	}
 
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized, sign in again"})
-		c.Abort()
 		return
 	}
 
-	err := wc.WalletService.TransferToWalletAddress(id.(uint), payload.Amount, payload.Recipient)
+	tx := wc.WalletService.DB.Begin()
+	if tx.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to start transaction"})
+	}
+	defer func () {
+		if r := recover(); r != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			return
+		}
+	}()
+
+	err := wc.WalletService.TransferToWalletAddress(tx, id.(uint), payload.Amount, payload.Recipient)
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
-		c.Abort()
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to complete transaction"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "funds transferred to wallet successfully",
 		"data": map[string]any{

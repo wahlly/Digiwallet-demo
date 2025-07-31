@@ -7,7 +7,12 @@ import (
 )
 
 func ConnectDB () *gorm.DB {
-	db, err := gorm.Open(postgres.Open("postgres://postgres:admin@localhost:5432/digiWal"), &gorm.Config{})
+	db, err := gorm.Open(
+		postgres.Open("postgres://postgres:admin@localhost:5432/digiWal"),
+		&gorm.Config{
+			SkipDefaultTransaction: true,	//undo db write transaction by default
+		},
+	)
 	if err != nil {
 		panic(err)
 	}

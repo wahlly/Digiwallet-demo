@@ -7,14 +7,16 @@ import (
 	"github.com/wahlly/Digiwallet-demo/models"
 	"github.com/wahlly/Digiwallet-demo/modules/paystack"
 	"github.com/wahlly/Digiwallet-demo/utils"
+	"gorm.io/gorm"
 )
 
 type WalletService struct {
 	us *UserService
+	DB *gorm.DB
 }
 
-func NewWalletService(us *UserService) *WalletService {
-	return &WalletService{us: us}
+func NewWalletService(us *UserService, db *gorm.DB) *WalletService {
+	return &WalletService{us: us, DB: db}
 }
 
 func (ws *WalletService) GetUserWallet(id uint) (*models.Wallet, error) {
@@ -113,9 +115,9 @@ func (ws *WalletService) VerifyWalletDeposit(uid uint, reference string) (map[st
 	return map[string]any{"amount": txn.Amount/100}, nil
 }
 
-func (ws *WalletService) TransferToWalletAddress(uid, amount uint, recipientAddress string) error {
+func (ws *WalletService) TransferToWalletAddress(tx *gorm.DB, uid, amount uint, recipientAddress string) error {
 	var user models.User
-	err := ws.us.db.Where("id = ?", uid).First(&user).Error
+	err := tx.Where("id = ?", uid).First(&user).Error
 	if err != nil {
 		return err
 	}
@@ -125,16 +127,18 @@ func (ws *WalletService) TransferToWalletAddress(uid, amount uint, recipientAddr
 	}
 
 	var recipient models.User
-	err = ws.us.db.Where("wallet->>'address' = ?", recipientAddress).First(&recipient).Error
+	err = tx.Where("wallet->>'address' = ?", recipientAddress).First(&recipient).Error
 	if err != nil {
 		return err
 	}
 
 	user.Wallet.Balance -= int64(amount) * 100
-	ws.us.db.Save(&user)
+	tx.Save(&user)
 
 	recipient.Wallet.Balance += int64(amount) * 100
-	ws.us.db.Save(&recipient)
+	tx.Save(&recipient)
 
 	return nil
 }
+
+//transfer to banks
