@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -115,9 +116,10 @@ func (ws *WalletService) VerifyWalletDeposit(uid uint, reference string) (map[st
 	return map[string]any{"amount": txn.Amount/100}, nil
 }
 
-func (ws *WalletService) TransferToWalletAddress(tx *gorm.DB, uid, amount uint, recipientAddress string) error {
+func (ws *WalletService) TransferToWalletAddress(ctx context.Context, dbTxn *gorm.DB, uid, amount uint, recipientAddress string) error {
+	var dbTxnWithCtx = dbTxn.WithContext(ctx)	//db transaction session with context
 	var user models.User
-	err := tx.Where("id = ?", uid).First(&user).Error
+	err := dbTxnWithCtx.Where("id = ?", uid).First(&user).Error
 	if err != nil {
 		return err
 	}
@@ -127,16 +129,16 @@ func (ws *WalletService) TransferToWalletAddress(tx *gorm.DB, uid, amount uint, 
 	}
 
 	var recipient models.User
-	err = tx.Where("wallet->>'address' = ?", recipientAddress).First(&recipient).Error
+	err = dbTxnWithCtx.Where("wallet->>'address' = ?", recipientAddress).First(&recipient).Error
 	if err != nil {
 		return err
 	}
 
 	user.Wallet.Balance -= int64(amount) * 100
-	tx.Save(&user)
+	dbTxnWithCtx.Save(&user)
 
 	recipient.Wallet.Balance += int64(amount) * 100
-	tx.Save(&recipient)
+	dbTxnWithCtx.Save(&recipient)
 
 	return nil
 }

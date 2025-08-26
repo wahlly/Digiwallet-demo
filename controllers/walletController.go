@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wahlly/Digiwallet-demo/modules/paystack"
@@ -111,7 +113,9 @@ func (wc *WalletController) TransferToWalletAddress(c *gin.Context) {
 		return
 	}
 
-	tx := wc.WalletService.DB.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	tx := wc.WalletService.DB.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to start transaction"})
 	}
@@ -122,7 +126,7 @@ func (wc *WalletController) TransferToWalletAddress(c *gin.Context) {
 		}
 	}()
 
-	err := wc.WalletService.TransferToWalletAddress(tx, id.(uint), payload.Amount, payload.Recipient)
+	err := wc.WalletService.TransferToWalletAddress(ctx, tx, id.(uint), payload.Amount, payload.Recipient)
 	if err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
