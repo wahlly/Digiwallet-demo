@@ -22,7 +22,7 @@ func NewPaystackClient() *PaystackClient {
 
 type InitTxnReqBody struct {
 	Email string `json:"email"`
-	Amount uint `json:"amount"`
+	Amount int64 `json:"amount"`
 }
 
 type PaystackInitTxnRes struct {
@@ -31,7 +31,7 @@ type PaystackInitTxnRes struct {
 	Data map[string]any `json:"data"`
 }
 
-func (p *PaystackClient) InitiateTransaction(amount uint, email string, ref string) (*PaystackInitTxnRes, error) {
+func (p *PaystackClient) InitiateTransaction(amount int64, email string, ref string) (*PaystackInitTxnRes, error) {
 	url := string(p.BaseUrl) + "/transaction/initialize"
 	var resBody *PaystackInitTxnRes
 
@@ -124,12 +124,12 @@ func (p *PaystackClient) VerifyTransaction(uid uint, reference string) (*Paystac
 	return resBody, nil
 }
 
-func (p *PaystackClient) CalculateProcessingFee(amount uint) uint{
-	var processingCharges uint
+func (p *PaystackClient) CalculateProcessingFee(amount int64) int64{
+	var processingCharges int64
 	if amount < 2500 {
-		processingCharges = uint(0.015 * float64(amount))
+		processingCharges = int64(0.015 * float64(amount))
 	} else{
-		processingCharges = uint(0.015 * float64(amount)) + 100
+		processingCharges = int64(0.015 * float64(amount)) + 100
 	}
 
 	return processingCharges

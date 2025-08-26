@@ -98,7 +98,7 @@ func (wc *WalletController) VerifyWalletDeposit(c *gin.Context) {
 
 func (wc *WalletController) TransferToWalletAddress(c *gin.Context) {
 	type reqBody struct{
-		Amount uint `json:"amount" binding:"required,min=100"`
+		Amount int64 `json:"amount" binding:"required,min=100"`
 		Recipient string	`json:"recipient" binding:"required"`
 	}
 	var payload reqBody

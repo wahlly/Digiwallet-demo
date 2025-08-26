@@ -60,7 +60,7 @@ func (ws *WalletService) InitializeWalletDeposit(payload *paystack.InitTxnReqBod
 
 	txn := &models.Transaction{
 		Amount: payload.Amount * 100,
-		User_id: int(userId),
+		User_id: uint(userId),
 		Type: "credit",
 		Reference: ref,
 	}
@@ -116,7 +116,7 @@ func (ws *WalletService) VerifyWalletDeposit(uid uint, reference string) (map[st
 	return map[string]any{"amount": txn.Amount/100}, nil
 }
 
-func (ws *WalletService) TransferToWalletAddress(ctx context.Context, dbTxn *gorm.DB, uid, amount uint, recipientAddress string) error {
+func (ws *WalletService) TransferToWalletAddress(ctx context.Context, dbTxn *gorm.DB, uid uint, amount int64, recipientAddress string) error {
 	var dbTxnWithCtx = dbTxn.WithContext(ctx)	//db transaction session with context
 	var user models.User
 	err := dbTxnWithCtx.Where("id = ?", uid).First(&user).Error
@@ -124,7 +124,7 @@ func (ws *WalletService) TransferToWalletAddress(ctx context.Context, dbTxn *gor
 		return err
 	}
 
-	if user.Wallet.Balance < int64(amount) * 100 {
+	if user.Wallet.Balance < amount * 100 {
 		return errors.New("insufficient account balance")
 	}
 
@@ -134,11 +134,38 @@ func (ws *WalletService) TransferToWalletAddress(ctx context.Context, dbTxn *gor
 		return err
 	}
 
-	user.Wallet.Balance -= int64(amount) * 100
-	dbTxnWithCtx.Save(&user)
+	user.Wallet.Balance -= amount * 100
+	err = dbTxnWithCtx.Save(&user).Error
+	if err != nil{
+		return err
+	}
 
-	recipient.Wallet.Balance += int64(amount) * 100
-	dbTxnWithCtx.Save(&recipient)
+	recipient.Wallet.Balance += amount * 100
+	err = dbTxnWithCtx.Save(&recipient).Error
+	if err != nil{
+		return err
+	}
+
+	//log transaction for credit and debit
+	debit := &models.Transaction{
+		Amount: amount * 100,
+		User_id: uint(user.ID),
+		Type: "debit",
+		Reference: strings.ToUpper(utils.AlphaNumeric(10, "alphaNumeric")),
+		Status: "success",
+	}
+	err = dbTxnWithCtx.Create(debit).Error
+	if err != nil {
+		return err
+	}
+	credit := &models.Transaction{
+		Amount: amount * 100,
+		User_id: uint(recipient.ID),
+		Type: "credit",
+		Reference: strings.ToUpper(utils.AlphaNumeric(10, "alphaNumeric")),
+		Status: "success",
+	}
+	dbTxnWithCtx.Create(credit)
 
 	return nil
 }
