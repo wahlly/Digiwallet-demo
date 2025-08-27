@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wahlly/Digiwallet-demo/modules/paystack"
 	"github.com/wahlly/Digiwallet-demo/services"
+	"github.com/wahlly/Digiwallet-demo/utils"
 )
 
 
@@ -137,10 +138,12 @@ func (wc *WalletController) TransferToWalletAddress(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to complete transaction"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "funds transferred to wallet successfully",
-		"data": map[string]any{
-			"amount": payload.Amount,
-		},
+
+	c.JSON(http.StatusOK, &utils.ApiMessageHandler{
+		Success: true,
+		StatusCode: http.StatusOK,
+		Message: "funds transferred to wallet successfully",
+		Data: map[string]any{"amount": payload.Amount},
+		Error: nil,
 	})
 }

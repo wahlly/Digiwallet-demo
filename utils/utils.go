@@ -28,7 +28,7 @@ func GenerateWalletAddress(db *gorm.DB) (string, error) {
 	}
 }
 
-func AlphaNumeric(length uint, form string) string {
+func AlphaNumeric(length int, form string) string {
 	characters := map[string]string{
 		"alphaNumeric": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
 		"alpha": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
@@ -36,7 +36,7 @@ func AlphaNumeric(length uint, form string) string {
 	}
 
 	var res string
-	for i := 0; i < int(length); i++ {
+	for i := 0; i < length; i++ {
 		res += string(characters[form][rand.Intn(10)])
 	}
 
@@ -44,8 +44,9 @@ func AlphaNumeric(length uint, form string) string {
 }
 
 type ApiMessageHandler struct {
-	Status	bool			`json:"status"`
+	Success	bool			`json:"success"`
 	StatusCode	int			`json:"statusCode"`
 	Message	string		`json:"message"`
 	Data		map[string]any	`json:"data"`
+	Error		error			`json:"-"`
 }
