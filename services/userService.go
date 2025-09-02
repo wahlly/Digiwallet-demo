@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 
 	"github.com/wahlly/Digiwallet-demo/models"
@@ -43,9 +44,9 @@ func (us *UserService) CreateUser(user *models.User) error {
 	return nil
 }
 
-func (us *UserService) LoginUser(email, password string) (id uint, token string, err error) {
+func (us *UserService) LoginUser(ctx context.Context, email, password string) (id uint, token string, err error) {
 	var user models.User
-	err = us.db.Where("email = ?", email).First(&user).Error
+	err = us.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return 0, "", err
 	}
