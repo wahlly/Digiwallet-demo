@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -17,19 +18,49 @@ type UserController struct{
 }
 
 func (uc *UserController) CreateUser(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
-
-	err := uc.UserService.CreateUser(&user)
+	reqBody, err := utils.BindAndValidateReqBody[dtos.UserRegistrationReqDto](c)
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		e := utils.FormatValidationErrors(err)
+		c.JSON(http.StatusBadRequest, utils.ApiMessageHandler{
+			Success: false,
+			StatusCode: http.StatusBadRequest,
+			Message: "validation error",
+			Data: map[string]any{
+				"errors": e,
+			},
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "success"})
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	user := &models.User{
+		FirstName: reqBody.FirstName,
+		LastName: reqBody.LastName,
+		Phone: reqBody.Phone,
+		Email: reqBody.Email,
+		Password: reqBody.Password,
+		UserName: reqBody.UserName,
+	}
+	err = uc.UserService.CreateUser(ctx, user)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusBadRequest, utils.ApiMessageHandler{
+			Success: false,
+			StatusCode: http.StatusBadRequest,
+			Message: err.Error(),
+			Data: map[string]any{},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.ApiMessageHandler{
+		Success: true,
+		StatusCode: http.StatusOK,
+		Message: "User created successfully",
+		Data: map[string]any{},
+	})
 }
 
 func (uc *UserController) LoginUser(c *gin.Context) {

@@ -20,7 +20,7 @@ func NewUserService(db *gorm.DB) *UserService {
 	}
 }
 
-func (us *UserService) CreateUser(user *models.User) error {
+func (us *UserService) CreateUser(ctx context.Context, user *models.User) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func (us *UserService) CreateUser(user *models.User) error {
 		Address: walletAddress,
 		Balance: 0,
 	}
-	err = us.db.Create(user).Error
+	err = us.db.WithContext(ctx).Create(user).Error
 	if err != nil {
 		return err
 	}
