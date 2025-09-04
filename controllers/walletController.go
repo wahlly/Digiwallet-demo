@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wahlly/Digiwallet-demo/dtos"
 	"github.com/wahlly/Digiwallet-demo/modules/paystack"
 	"github.com/wahlly/Digiwallet-demo/services"
 	"github.com/wahlly/Digiwallet-demo/utils"
@@ -98,19 +99,26 @@ func (wc *WalletController) VerifyWalletDeposit(c *gin.Context) {
 }
 
 func (wc *WalletController) TransferToWalletAddress(c *gin.Context) {
-	type reqBody struct{
-		Amount int64 `json:"amount" binding:"required,min=100"`
-		Recipient string	`json:"recipient" binding:"required"`
-	}
-	var payload reqBody
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	reqBody, err := utils.BindAndValidateReqBody[dtos.WalletP2PTransferReqDto](c)
+	if err != nil {
+		e := utils.FormatValidationErrors(err)
+		c.JSON(http.StatusBadRequest, utils.ApiMessageHandler{
+			Success: false,
+			StatusCode: http.StatusBadRequest,
+			Message: "validation error",
+			Data: map[string]any{"errors": e},
+		})
 		return
 	}
 
 	id, exists := c.Get("id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized, sign in again"})
+		c.JSON(http.StatusUnauthorized, utils.ApiMessageHandler{
+			Success: false,
+			StatusCode: http.StatusUnauthorized,
+			Message: "unauthorized, sign in again",
+			Data: map[string]any{},
+		})
 		return
 	}
 
@@ -118,24 +126,45 @@ func (wc *WalletController) TransferToWalletAddress(c *gin.Context) {
 	defer cancel()
 	tx := wc.WalletService.DB.WithContext(ctx).Begin()
 	if tx.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to start transaction"})
+		c.JSON(http.StatusInternalServerError, utils.ApiMessageHandler{
+			Success: false,
+			StatusCode: http.StatusUnauthorized,
+			Message: "failed to start transaction",
+			Data: map[string]any{},
+		})
+		return
 	}
 	defer func () {
 		if r := recover(); r != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			c.JSON(http.StatusInternalServerError, utils.ApiMessageHandler{
+				Success: false,
+				StatusCode: http.StatusUnauthorized,
+				Message: "internal server error",
+				Data: map[string]any{},
+			})
 			return
 		}
 	}()
 
-	err := wc.WalletService.TransferToWalletAddress(ctx, tx, id.(uint), payload.Amount, payload.Recipient)
+	err = wc.WalletService.TransferToWalletAddress(ctx, tx, id.(uint), reqBody.Amount, reqBody.Recipient)
 	if err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadRequest, utils.ApiMessageHandler{
+			Success: false,
+			StatusCode: http.StatusUnauthorized,
+			Message: err.Error(),
+			Data: map[string]any{},
+		})
 		return
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to complete transaction"})
+		c.JSON(http.StatusInternalServerError, utils.ApiMessageHandler{
+			Success: false,
+			StatusCode: http.StatusUnauthorized,
+			Message: "failed to complete transaction",
+			Data: map[string]any{},
+		})
 		return
 	}
 
@@ -143,7 +172,6 @@ func (wc *WalletController) TransferToWalletAddress(c *gin.Context) {
 		Success: true,
 		StatusCode: http.StatusOK,
 		Message: "funds transferred to wallet successfully",
-		Data: map[string]any{"amount": payload.Amount},
-		Error: nil,
+		Data: map[string]any{"amount": reqBody.Amount},
 	})
 }

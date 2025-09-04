@@ -48,5 +48,4 @@ type ApiMessageHandler struct {
 	StatusCode	int			`json:"statusCode"`
 	Message	string		`json:"message"`
 	Data		map[string]any	`json:"data"`
-	Error		error			`json:"-"`
 }
