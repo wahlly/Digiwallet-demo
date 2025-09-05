@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/wahlly/Digiwallet-demo/dtos"
 	"github.com/wahlly/Digiwallet-demo/models"
 	"github.com/wahlly/Digiwallet-demo/modules/paystack"
 	"github.com/wahlly/Digiwallet-demo/utils"
@@ -40,12 +41,12 @@ func (ws *WalletService) GetWalletByAddress(address string) (*models.Wallet, err
 	return &user.Wallet, nil
 }
 
-func (ws *WalletService) InitializeWalletDeposit(payload *paystack.InitTxnReqBody, userId uint) (*paystack.PaystackInitTxnRes, error) {
+func (ws *WalletService) InitializeWalletDeposit(ctx context.Context, payload *dtos.InitTxnReqBody, userId uint) (*dtos.PaystackInitTxnRes, error) {
 	if payload.Amount < 100 {
 		return nil, errors.New("minimum deposit allowed is 100")
 	}
 	ref := strings.ToUpper(utils.AlphaNumeric(10, "alphaNumeric"))
-	res := &paystack.PaystackInitTxnRes{}
+	res := &dtos.PaystackInitTxnRes{}
 	var err error
 	paystackClient := paystack.NewPaystackClient()
 	amount := payload.Amount + paystackClient.CalculateProcessingFee(payload.Amount)
@@ -64,22 +65,22 @@ func (ws *WalletService) InitializeWalletDeposit(payload *paystack.InitTxnReqBod
 		Type: "credit",
 		Reference: ref,
 	}
-	err = ws.us.db.Create(txn).Error
+	err = ws.us.db.WithContext(ctx).Create(txn).Error
 	if err != nil {
 		return res, err
 	}
 
-	// return map[string]any{"data": res}, nil
 	return res, nil
 }
 
-func (ws *WalletService) VerifyWalletDeposit(uid uint, reference string) (map[string]any, error) {
+func (ws *WalletService) VerifyWalletDeposit(ctx context.Context, dbTxn *gorm.DB, uid uint, reference string) (map[string]any, error) {
 	paystackClient := paystack.NewPaystackClient()
 	res := &paystack.PaystackVerifyTxnRes{}
 	var err error
 
+	var dbTxnWithCtx = dbTxn.WithContext(ctx)
 	var txn models.Transaction
-	err = ws.us.db.Where("reference = ? AND user_id = ?", reference, uid).First(&txn).Error
+	err = dbTxnWithCtx.Where("reference = ? AND user_id = ?", reference, uid).First(&txn).Error
 	if err != nil {
 		return nil, err
 	}
@@ -102,16 +103,16 @@ func (ws *WalletService) VerifyWalletDeposit(uid uint, reference string) (map[st
 	}
 
 	txn.Status = "success"
-	ws.us.db.Save(&txn)
+	dbTxnWithCtx.Save(&txn)
 
 	var user models.User
-	err = ws.us.db.Where("id = ?", uid).First(&user).Error
+	err = dbTxnWithCtx.Where("id = ?", uid).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
 
 	user.Wallet.Balance += int64(txn.Amount)
-	ws.us.db.Save(&user)
+	dbTxnWithCtx.Save(&user)
 
 	return map[string]any{"amount": txn.Amount/100}, nil
 }

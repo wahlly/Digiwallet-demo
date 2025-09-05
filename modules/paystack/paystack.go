@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/wahlly/Digiwallet-demo/dtos"
 )
 
 type PaystackClient struct {
@@ -20,20 +22,9 @@ func NewPaystackClient() *PaystackClient {
 	}
 }
 
-type InitTxnReqBody struct {
-	Email string `json:"email"`
-	Amount int64 `json:"amount"`
-}
-
-type PaystackInitTxnRes struct {
-	Status bool `json:"status"`
-	Message string `json:"message"`
-	Data map[string]any `json:"data"`
-}
-
-func (p *PaystackClient) InitiateTransaction(amount int64, email string, ref string) (*PaystackInitTxnRes, error) {
+func (p *PaystackClient) InitiateTransaction(amount int64, email string, ref string) (*dtos.PaystackInitTxnRes, error) {
 	url := string(p.BaseUrl) + "/transaction/initialize"
-	var resBody *PaystackInitTxnRes
+	var resBody *dtos.PaystackInitTxnRes
 
 	// payload := &InitTxnReqBody{
 	// 	Email: email,
