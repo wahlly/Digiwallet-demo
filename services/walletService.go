@@ -21,9 +21,9 @@ func NewWalletService(us *UserService, db *gorm.DB) *WalletService {
 	return &WalletService{us: us, DB: db}
 }
 
-func (ws *WalletService) GetUserWallet(id uint) (*models.Wallet, error) {
+func (ws *WalletService) GetUserWallet(ctx context.Context, id uint) (*models.Wallet, error) {
 	var user models.User
-	err := ws.us.db.Where("id = ?", id).First(&user).Error
+	err := ws.us.db.WithContext(ctx).Where("id = ?", id).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -31,9 +31,9 @@ func (ws *WalletService) GetUserWallet(id uint) (*models.Wallet, error) {
 	return &user.Wallet, nil
 }
 
-func (ws *WalletService) GetWalletByAddress(address string) (*models.Wallet, error) {
+func (ws *WalletService) GetWalletByAddress(ctx context.Context, address string) (*models.Wallet, error) {
 	var user models.User
-	err := ws.us.db.Where("wallet->>'address' = ?", address).First(&user).Error
+	err := ws.us.db.WithContext(ctx).Where("wallet->>'address' = ?", address).First(&user).Error
 	if err != nil {
 		return nil, err
 	}

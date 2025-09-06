@@ -19,31 +19,60 @@ type WalletController struct {
 func (wc *WalletController) GetUserWallet(c *gin.Context) {
 	id, exists := c.Get("id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized, sign in again"})
+		c.JSON(http.StatusUnauthorized, utils.ApiMessageHandler{
+			Success: false,
+			StatusCode: http.StatusUnauthorized,
+			Message: "unauthorized, sign in again",
+			Data: map[string]any{},
+		})
 		c.Abort()
 		return
 	}
 
-	wallet, err := wc.WalletService.GetUserWallet(id.(uint))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	wallet, err := wc.WalletService.GetUserWallet(ctx, id.(uint))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, utils.ApiMessageHandler{
+			Success: false,
+			StatusCode: http.StatusInternalServerError,
+			Message: err.Error(),
+			Data: map[string]any{},
+		})
 		c.Abort()
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "success", "wallet": wallet})
+	c.JSON(http.StatusOK, utils.ApiMessageHandler{
+		Success: true,
+		StatusCode: http.StatusOK,
+		Message: "success",
+		Data: map[string]any{"wallet": wallet},
+	})
 }
 
 func (wc *WalletController) GetWalletByAddress(c *gin.Context) {
 	address := c.Param("address")
-	wallet, err := wc.WalletService.GetWalletByAddress(address)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	wallet, err := wc.WalletService.GetWalletByAddress(ctx, address)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, utils.ApiMessageHandler{
+			Success: false,
+			StatusCode: http.StatusInternalServerError,
+			Message: err.Error(),
+			Data: map[string]any{},
+		})
 		c.Abort()
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "success", "wallet": wallet})
+	c.JSON(http.StatusOK, utils.ApiMessageHandler{
+		Success: true,
+		StatusCode: http.StatusOK,
+		Message: "success",
+		Data: map[string]any{"wallet": wallet},
+	})
 }
 
 func (wc *WalletController) InitializeWalletDeposit(c *gin.Context) {
