@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/wahlly/Digiwallet-demo/models"
+	"github.com/wahlly/Digiwallet-demo/internal/models"
 )
 
 

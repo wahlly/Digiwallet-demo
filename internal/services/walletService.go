@@ -5,10 +5,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/wahlly/Digiwallet-demo/dtos"
-	"github.com/wahlly/Digiwallet-demo/models"
-	"github.com/wahlly/Digiwallet-demo/modules/paystack"
-	"github.com/wahlly/Digiwallet-demo/utils"
+	"github.com/wahlly/Digiwallet-demo/internal/dtos"
+	"github.com/wahlly/Digiwallet-demo/internal/models"
+	"github.com/wahlly/Digiwallet-demo/internal/modules/paystack"
+	"github.com/wahlly/Digiwallet-demo/internal/utils"
 	"gorm.io/gorm"
 )
 

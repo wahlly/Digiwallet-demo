@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/wahlly/Digiwallet-demo/dtos"
+	"github.com/wahlly/Digiwallet-demo/internal/dtos"
 )
 
 type PaystackClient struct {

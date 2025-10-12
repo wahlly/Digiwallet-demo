@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"strconv"
 
-	"github.com/wahlly/Digiwallet-demo/models"
+	"github.com/wahlly/Digiwallet-demo/internal/models"
 	"gorm.io/gorm"
 )
 

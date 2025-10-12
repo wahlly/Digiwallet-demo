@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/wahlly/Digiwallet-demo/config"
-	"github.com/wahlly/Digiwallet-demo/routes"
+	"github.com/wahlly/Digiwallet-demo/internal/routes"
 )
 
 func main() {

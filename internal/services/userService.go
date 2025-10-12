@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wahlly/Digiwallet-demo/models"
-	"github.com/wahlly/Digiwallet-demo/utils"
+	"github.com/wahlly/Digiwallet-demo/internal/models"
+	"github.com/wahlly/Digiwallet-demo/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -30,7 +30,7 @@ func (us *UserService) CreateUser(ctx context.Context, user *models.User) error 
 	if err != nil {
 		return err
 	}
-	
+
 	user.Password = string(hashedPassword)
 	user.Wallet = models.Wallet{
 		Address: walletAddress,

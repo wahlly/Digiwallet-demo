@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/wahlly/Digiwallet-demo/models"
+	"github.com/wahlly/Digiwallet-demo/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

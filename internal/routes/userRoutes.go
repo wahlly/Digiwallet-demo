@@ -2,8 +2,8 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/wahlly/Digiwallet-demo/controllers"
-	"github.com/wahlly/Digiwallet-demo/services"
+	"github.com/wahlly/Digiwallet-demo/internal/controllers"
+	"github.com/wahlly/Digiwallet-demo/internal/services"
 )
 
 
